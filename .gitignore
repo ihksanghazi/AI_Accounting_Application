@@ -1,0 +1,57 @@
+# =================================================
+# == Next.js (web_app)
+# =================================================
+
+# Dependencies
+/web_app/node_modules
+/web_app/.pnp
+/web_app/.pnp.*
+/web_app/.yarn/*
+/web_app/!.yarn/patches
+/web_app/!.yarn/plugins
+/web_app/!.yarn/releases
+/web_app/!.yarn/versions
+
+# Build & Output
+/web_app/.next/
+/web_app/out/
+/web_app/build
+
+# Testing
+/web_app/coverage
+
+# Misc
+/web_app/.DS_Store
+/web_app/*.pem
+/web_app/.vercel
+
+# Debug Logs
+/web_app/npm-debug.log*
+/web_app/yarn-debug.log*
+/web_app/yarn-error.log*
+/web_app/.pnpm-debug.log*
+
+# TypeScript
+/web_app/*.tsbuildinfo
+/web_app/next-env.d.ts
+
+# Local Environment
+/web_app/.env*
+
+# =================================================
+# == Python (ai_service)
+# =================================================
+ai_service/**/__pycache__/_
+ai_service/**/*.pyc
+/ai_service/venv/
+/ai_service/.venv/
+
+# =================================================
+# == Root Level
+# =================================================
+
+# Docker Compose Environment
+.env
+
+# OS-specific
+.DS_Store

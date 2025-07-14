@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+# Tambahkan library AI/OCR di sini nanti, contoh:
+# opencv-python-headless
+# tensorflow
+# psycopg2-binary  <-- Untuk koneksi ke PostgreSQL

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Layanan Database PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:5432"
+
+  # Layanan Backend AI dengan Python
+  ai_service:
+    container_name: ai_service
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ./ai_service/app:/app  # Untuk live-reloading saat development
+    ports:
+      - "${AI_SERVICE_PORT}:8000"
+    depends_on:
+      - db # Pastikan DB jalan dulu sebelum layanan AI
+
+  # Layanan Frontend Next.js
+  web_app:
+    container_name: web_app
+    build:
+      context: ./web_app
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Mount kode lokal kita untuk live-reloading
+      - ./web_app:/app
+      # Pastikan node_modules dari container yang digunakan
+      - /app/node_modules
+    command: npm run dev # <- Menjalankan server development, bukan produksi
+
+volumes:
+  postgres_data:
