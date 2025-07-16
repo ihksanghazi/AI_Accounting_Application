@@ -24,6 +24,7 @@
 /web_app/.DS_Store
 /web_app/*.pem
 /web_app/.vercel
+/web_app/src/generated/prisma
 
 # Debug Logs
 /web_app/npm-debug.log*

@@ -14,6 +14,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "${DB_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Layanan Backend AI dengan Python
   ai_service:
@@ -26,9 +31,12 @@ services:
       - ./ai_service/app:/app  # Untuk live-reloading saat development
     ports:
       - "${AI_SERVICE_PORT}:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
-      - db # Pastikan DB jalan dulu sebelum layanan AI
-
+      db: # Pastikan DB jalan dulu sebelum layanan AI
+        condition: service_healthy
+  
   # Layanan Frontend Next.js
   web_app:
     container_name: web_app
@@ -38,8 +46,20 @@ services:
     restart: always
     ports:
       - "${WEB_APP_PORT}:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - ai_service # Pastikan layanan AI jalan dulu
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - "${ADMINER_PORT}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

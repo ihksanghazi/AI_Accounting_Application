@@ -1,0 +1,20 @@
+# ai_service/Dockerfile.dev (File BARU)
+
+# Gunakan base image Python yang ringan
+FROM python:3.10-slim
+
+# Set working directory di dalam container
+WORKDIR /app
+
+# Salin file requirements terlebih dahulu untuk caching
+COPY requirements.txt .
+
+# Install semua library yang dibutuhkan
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose port yang digunakan oleh FastAPI
+EXPOSE 8000
+
+# Perintah default akan diambil dari docker-compose.dev.yml
+# Tapi kita bisa tambahkan ini sebagai fallback
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

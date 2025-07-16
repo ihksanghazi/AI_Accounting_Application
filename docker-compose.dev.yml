@@ -20,14 +20,10 @@ services:
     container_name: ai_service
     build:
       context: ./ai_service
-      dockerfile: Dockerfile
-    restart: always
+      dockerfile: Dockerfile.dev
     volumes:
       - ./ai_service/app:/app  # Untuk live-reloading saat development
-    ports:
-      - "${AI_SERVICE_PORT}:8000"
-    depends_on:
-      - db # Pastikan DB jalan dulu sebelum layanan AI
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   # Layanan Frontend Next.js
   web_app:
