@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
+python-multipart
 # Tambahkan library AI/OCR di sini nanti, contoh:
 # opencv-python-headless
 # tensorflow
