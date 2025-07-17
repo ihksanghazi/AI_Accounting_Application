@@ -46,6 +46,7 @@ ai_service/**/__pycache__/_
 ai_service/**/*.pyc
 /ai_service/venv/
 /ai_service/.venv/
+/ai_service/app/uploads/
 
 # =================================================
 # == Root Level
