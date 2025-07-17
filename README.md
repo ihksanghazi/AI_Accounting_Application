@@ -29,14 +29,23 @@ Pastikan Anda sudah menginstall perangkat lunak berikut:
     Buat sebuah file bernama `.env` di direktori utama proyek. Isi file tersebut dengan konfigurasi berikut:
     ```env
     # Konfigurasi Database PostgreSQL
-    POSTGRES_DB=******
-    POSTGRES_USER=******
-    POSTGRES_PASSWORD=******
+    POSTGRES_DB=**********
+    POSTGRES_USER=**********
+    POSTGRES_PASSWORD=**********
 
-    # Port Aplikasi
+    # Port Aplikasi (opsional, untuk referensi)
     WEB_APP_PORT=3000
     AI_SERVICE_PORT=8000
     DB_PORT=5433
+
+    # Port untuk adminer
+    ADMINER_PORT=8080
+
+    # URL Koneksi Database untuk Prisma
+    DATABASE_URL="postgresql://username:password@db:5432/akuntansi_db"
+
+    # Kunci rahasia untuk menandatangani JSON Web Tokens
+    JWT_SECRET=**********
     ```
 
 ---

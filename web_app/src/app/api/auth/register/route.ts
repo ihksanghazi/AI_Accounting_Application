@@ -1,11 +1,8 @@
 // web_app/src/app/api/auth/register/route.ts
 
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-
-// Inisialisasi Prisma Client (praktik terbaik: buat satu instance dan ekspor)
-const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
