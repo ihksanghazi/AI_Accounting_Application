@@ -46,6 +46,9 @@ Pastikan Anda sudah menginstall perangkat lunak berikut:
 
     # Kunci rahasia untuk menandatangani JSON Web Tokens
     JWT_SECRET=**********
+
+    # dll
+    GOOGLE_API_KEY=**********
     ```
 
 ---
