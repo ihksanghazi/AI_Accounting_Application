@@ -47,6 +47,9 @@ Pastikan Anda sudah menginstall perangkat lunak berikut:
     # Kunci rahasia untuk menandatangani JSON Web Tokens
     JWT_SECRET=**********
 
+    # URL untuk AI Service yang bisa diakses dari Browser
+    NEXT_PUBLIC_AI_SERVICE_URL=http://localhost:8000
+
     # dll
     GOOGLE_API_KEY=**********
     ```
@@ -96,9 +99,9 @@ Untuk menghentikan dan menghapus semua container yang berjalan:
 
 - Jika Anda menjalankan mode Development:
     ```bash
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
     ```
 - Jika Anda menjalankan mode Produksi:
     ```bash
-    docker compose down
+    docker compose down -v
     ```

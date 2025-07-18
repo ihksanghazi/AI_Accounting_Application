@@ -4,9 +4,24 @@ import shutil
 import uuid
 from pathlib import Path
 from fastapi import FastAPI, File, UploadFile
-import extractor # Impor modul extractor kita
+from fastapi.middleware.cors import CORSMiddleware # <-- 1. IMPOR INI
+import extractor
 
+# Inisialisasi aplikasi FastAPI
 app = FastAPI(title="Layanan AI Akuntansi")
+
+origins = [
+    "http://localhost:3000", # Alamat frontend Next.js Anda
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Izinkan semua metode (GET, POST, dll)
+    allow_headers=["*"], # Izinkan semua header
+)
+
 UPLOAD_DIR = Path("uploads")
 
 @app.on_event("startup")
@@ -32,7 +47,7 @@ async def process_scan(file: UploadFile = File(...)):
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # ---- Memanggil Gemini untuk Ekstraksi ----
+        # Memanggil Gemini untuk Ekstraksi
         extracted_data = extractor.extract_data_with_gemini(file_path)
 
         return {
