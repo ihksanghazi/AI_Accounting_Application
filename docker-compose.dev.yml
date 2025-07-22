@@ -38,5 +38,12 @@ services:
       - /app/node_modules
     command: npm run dev # <- Menjalankan server development, bukan produksi
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+
 volumes:
   postgres_data:

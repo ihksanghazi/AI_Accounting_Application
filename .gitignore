@@ -1,5 +1,5 @@
 # =================================================
-# == Next.js (Frontend)
+# == Next.js (frontend)
 # =================================================
 
 # Dependencies
@@ -24,7 +24,6 @@
 /frontend/.DS_Store
 /frontend/*.pem
 /frontend/.vercel
-/frontend/src/generated/prisma
 
 # Debug Logs
 /frontend/npm-debug.log*
@@ -42,11 +41,21 @@
 # =================================================
 # == Python (ai_service)
 # =================================================
-ai_service/**/__pycache__/_
+ai_service/**/__pycache__/
 ai_service/**/*.pyc
 /ai_service/venv/
 /ai_service/.venv/
 /ai_service/app/uploads/
+
+# =================================================
+# == Go (Backend)
+# =================================================
+
+/backend/main
+/backend/tmp
+/backend/air.log
+/backend/vendor/
+
 
 # =================================================
 # == Root Level
