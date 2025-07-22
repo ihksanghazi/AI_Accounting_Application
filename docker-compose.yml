@@ -39,14 +39,14 @@ services:
         condition: service_healthy
   
   # Layanan Frontend Next.js
-  web_app:
-    container_name: web_app
+  frontend:
+    container_name: frontend_app
     build:
-      context: ./web_app
+      context: ./frontend
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "${WEB_APP_PORT}:3000"
+      - "${FRONTEND_APP_PORT}:3000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}

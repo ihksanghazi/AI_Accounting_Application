@@ -26,14 +26,14 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   # Layanan Frontend Next.js
-  web_app:
-    container_name: web_app
+  frontend:
+    container_name: frontend
     build:
-      context: ./web_app
+      context: ./frontend
       dockerfile: Dockerfile.dev
     volumes:
       # Mount kode lokal kita untuk live-reloading
-      - ./web_app:/app
+      - ./frontend:/app
       # Pastikan node_modules dari container yang digunakan
       - /app/node_modules
     command: npm run dev # <- Menjalankan server development, bukan produksi
