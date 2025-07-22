@@ -99,9 +99,9 @@ Untuk menghentikan dan menghapus semua container yang berjalan:
 
 - Jika Anda menjalankan mode Development:
     ```bash
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+    docker compose -f docker-compose.yml -f docker-compose.dev.yml down
     ```
 - Jika Anda menjalankan mode Produksi:
     ```bash
-    docker compose down -v
+    docker compose down
     ```

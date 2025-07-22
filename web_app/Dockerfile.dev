@@ -1,4 +1,5 @@
-# web_app/Dockerfile.dev (File BARU)
+# web_app/Dockerfile.dev
+
 FROM node:18-alpine
 
 WORKDIR /app
@@ -6,7 +7,10 @@ WORKDIR /app
 # Salin package.json untuk install dependencies
 COPY package*.json ./
 
-# Cukup install dependencies. Kode akan di-mount dari 'volumes'.
+# PENTING: Salin skema Prisma SEBELUM npm install
+COPY prisma ./prisma
+
+# Install dependencies. `postinstall` akan berjalan di sini dan berhasil.
 RUN npm install
 
 # Expose port
