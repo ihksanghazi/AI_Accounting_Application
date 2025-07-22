@@ -24,18 +24,25 @@ const initialState: AuthState = {
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  // Reducers adalah fungsi yang mengubah state
   reducers: {
     login: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      const { user, token } = action.payload;
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
-      // Di dunia nyata, Anda mungkin akan menyimpan token di httpOnly cookie
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('user', JSON.stringify(user));
+      }
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+      }
     },
   },
 });

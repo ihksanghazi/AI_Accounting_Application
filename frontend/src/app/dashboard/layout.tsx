@@ -7,27 +7,35 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 
+// Impor hooks dan tipe dari Redux
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const timer = setTimeout(() => {
+      if (!isAuthenticated) {
+        router.replace('/login');
+      } else {
+        setIsReady(true);
+      }
+    }, 100); // Penundaan kecil untuk memastikan state Redux sudah terisi
 
-    // Jika tidak ada token, tendang ke halaman login
-    if (!token) {
-      router.replace('/login');
-    } else {
-      // Jika ada token, izinkan akses
-      setIsLoading(false);
-    }
-  }, [router]);
+    return () => clearTimeout(timer);
 
-  if (isLoading) {
+  }, [isAuthenticated, router]);
+
+  if (!isReady) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         Memeriksa sesi...

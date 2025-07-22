@@ -2,24 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-
-interface User { name: string; }
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '@/store/store';
+import { logout } from '@/store/slices/authSlice';
 
 export function Header() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("user");
+    dispatch(logout()); 
     router.push("/login");
   };
 
@@ -29,7 +22,8 @@ export function Header() {
         <h1 className="text-lg font-semibold">Dasbor</h1>
       </div>
       <div className="flex items-center gap-4">
-        <span>Halo, {user?.name || "Pengguna"}!</span>
+        {/* Tampilkan nama user dari state Redux */}
+        <span>Halo, {user?.Name || "Pengguna"}!</span>
         <Button variant="outline" onClick={handleLogout}>
           Logout
         </Button>
