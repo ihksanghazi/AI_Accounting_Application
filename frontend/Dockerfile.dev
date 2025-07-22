@@ -7,9 +7,6 @@ WORKDIR /app
 # Salin package.json untuk install dependencies
 COPY package*.json ./
 
-# PENTING: Salin skema Prisma SEBELUM npm install
-COPY prisma ./prisma
-
 # Install dependencies. `postinstall` akan berjalan di sini dan berhasil.
 RUN npm install
 
