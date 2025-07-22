@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
+import {toast} from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama minimal 2 karakter." }),
@@ -30,21 +32,21 @@ export function RegisterForm() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
+      await api.post('/auth/register', values);
+
+      toast.success("Pendaftaran berhasil!", {
+        description: "Anda sekarang bisa masuk menggunakan akun baru Anda.",
+        duration: 3000, // Notifikasi akan hilang setelah 3 detik
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Gagal mendaftar');
-      }
-
-      // Jika berhasil, arahkan ke halaman login
       router.push('/login');
+
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || 'Terjadi kesalahan yang tidak diketahui';
+      setError(errorMessage);
+
+      toast.error("Gagal Mendaftar", {
+        description: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }

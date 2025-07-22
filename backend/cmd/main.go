@@ -3,10 +3,12 @@ package main
 import (
 	"log"
 
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/ihksanghazi/AI_Accounting_Application/internal/database"
 	"github.com/ihksanghazi/AI_Accounting_Application/internal/handlers"
-
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -21,8 +23,14 @@ func main() {
 
 	r := gin.Default()
 
-	// Tambahkan CORS Middleware di sini nanti
-	// r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	api := r.Group("/api")
 	{

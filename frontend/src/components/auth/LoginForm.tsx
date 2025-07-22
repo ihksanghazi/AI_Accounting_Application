@@ -9,9 +9,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
+import { toast } from "sonner";
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
+import { login } from '@/store/slices/authSlice';
 
 const formSchema = z.object({
-  email: z.email({ message: "Format email tidak valid." }),
+  email: z.string().email({ message: "Format email tidak valid." }),
   password: z.string().min(1, { message: "Password tidak boleh kosong." }),
 });
 
@@ -19,6 +24,7 @@ export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -29,25 +35,18 @@ export function LoginForm() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
+      const response = await api.post('/auth/login', values);
+      const data = response.data;
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Gagal login');
-      }
-
-      // Simpan token dan data user ke localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Arahkan ke dasbor
+      dispatch(login({ user: data.user, token: data.token }));
+      
+      toast.success("Login berhasil!");
       router.push('/dashboard');
+
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err.response?.data?.error || 'Gagal login';
+      setError(errorMessage);
+      toast.error("Login Gagal", { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
