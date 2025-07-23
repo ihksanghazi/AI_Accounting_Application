@@ -11,10 +11,10 @@ import (
 // User sudah ada, kita lengkapi dengan relasi ke Company
 type User struct {
 	gorm.Model
-	Name     string  `json:"name"`
-	Email    string  `gorm:"unique" json:"email"`
-	Password string  `json:"-"`
-	Company  Company `gorm:"foreignKey:OwnerID" json:"company"` // Relasi: User memiliki Company
+	Name     string   `json:"name"`
+	Email    string   `gorm:"unique" json:"email"`
+	Password string   `json:"-"`
+	Company  *Company `gorm:"foreignKey:OwnerID" json:"company"` // Relasi: User memiliki Company
 }
 
 // Company sekarang memiliki detail lengkap

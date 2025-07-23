@@ -1,35 +1,35 @@
+// frontend/src/store/slices/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-// Definisikan tipe untuk data user dan state
-interface User {
-  ID: number;
-  Name: string;
-  Email: string;
-  // Tambahkan Company jika ada
-}
+import { User, Company } from '@/types';
+import { stat } from 'fs';
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  status: 'loading' | 'idle';
+  hasCompletedSetup: boolean;
 }
 
-// Nilai awal state
 const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
+  status: 'loading',
+  hasCompletedSetup: false,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<{ user: User; token: string }>) => {
-      const { user, token } = action.payload;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
+    login: (state, action: PayloadAction<{ user: User; token: string; hasCompletedSetup: boolean }>) => {
+      const { user, token, hasCompletedSetup } = action.payload;
+      state.user = user;
+      state.token = token;
       state.isAuthenticated = true;
+      state.status = 'idle';
+      state.hasCompletedSetup = hasCompletedSetup;
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', token);
         localStorage.setItem('user', JSON.stringify(user));
@@ -39,16 +39,33 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.status = 'idle';
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
       }
     },
+    setAuthIdle: (state) => {
+      state.status = 'idle';
+    },
+    setCompany: (state, action: PayloadAction<Company | null>) => {
+      if (state.user) {
+        state.user.Company = action.payload;
+        if (typeof window !== 'undefined'){
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
+      }
+    },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      state.status = 'idle';
+      if (typeof window !== 'undefined'){
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      }
+    },
   },
 });
 
-// Ekspor actions agar bisa digunakan di komponen lain
-export const { login, logout } = authSlice.actions;
-
-// Ekspor reducer untuk digabungkan di store utama
+export const { login, logout, setAuthIdle, setCompany, setUser } = authSlice.actions;
 export default authSlice.reducer;

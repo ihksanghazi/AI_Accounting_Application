@@ -55,27 +55,27 @@ func Login(c *gin.Context) {
 	}
 
 	var user models.User
-	database.DB.Where("email = ?", input.Email).First(&user)
-	if user.ID == 0 {
+	database.DB.Preload("Company").Where("email = ?", input.Email).First(&user)
+
+	if user.ID == 0 || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)) != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
+	hasAccounts := false
+	if user.Company != nil && user.Company.ID != 0 {
+		var accountCount int64
+		database.DB.Model(&models.Account{}).Where("company_id = ?", user.Company.ID).Count(&accountCount)
+		if accountCount > 0 {
+			hasAccounts = true
+		}
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId": user.ID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
+	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user})
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user, "hasCompletedSetup": hasAccounts})
 }

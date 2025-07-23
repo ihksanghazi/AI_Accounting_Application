@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ihksanghazi/AI_Accounting_Application/internal/database"
 	"github.com/ihksanghazi/AI_Accounting_Application/internal/handlers"
+	"github.com/ihksanghazi/AI_Accounting_Application/internal/middleware"
 	"github.com/joho/godotenv"
 )
 
@@ -38,6 +39,14 @@ func main() {
 		{
 			auth.POST("/register", handlers.Register)
 			auth.POST("/login", handlers.Login)
+		}
+
+		protected := api.Group("/")
+		protected.Use(middleware.AuthMiddleware())
+		{
+			protected.GET("/companies", handlers.GetCompany)
+			protected.POST("/companies", handlers.CreateCompany)
+			protected.PUT("/companies", handlers.UpdateCompany)
 		}
 	}
 

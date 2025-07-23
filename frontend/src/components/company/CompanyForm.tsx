@@ -1,4 +1,3 @@
-// web_app/src/components/company/CompanyForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,103 +5,111 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import api from "@/lib/axios";
+
+// Impor hooks, actions, dan tipe data yang benar
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { setUser, setCompany } from "@/store/slices/authSlice";
+import { Company } from "@/types";
+
+// Impor semua komponen UI yang dibutuhkan
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface Company { id: string; name: string; }
 
-// Skema validasi form
 const formSchema = z.object({
   name: z.string().min(2, "Nama perusahaan minimal 2 karakter."),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  type: z.enum(["JASA", "DAGANG", "MANUFAKTUR"], {
+    required_error: "Anda wajib memilih jenis perusahaan.",
+  }),
 });
 
-// Komponen menerima data awal (jika ada) dan fungsi callback
 interface CompanyFormProps {
   initialData: Company | null;
-  onSuccess: () => void; // Fungsi untuk me-refresh data di halaman utama
 }
 
-export function CompanyForm({ initialData, onSuccess }: CompanyFormProps) {
+export function CompanyForm({ initialData }: CompanyFormProps) {
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Tentukan apakah form ini dalam mode "edit" atau "create"
   const isEditMode = !!initialData;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: initialData?.name || "",
-    },
+    defaultValues: {},
   });
 
   useEffect(() => {
-    // Update nilai form jika initialData berubah
-    form.reset({ name: initialData?.name || "" });
+    if (initialData) {
+      form.reset(initialData);
+    }
   }, [initialData, form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setError(null);
-    const token = localStorage.getItem("authToken");
-
     try {
-      const url = '/api/companies';
-      // Tentukan metode HTTP: PUT untuk update, POST untuk create
       const method = isEditMode ? 'PUT' : 'POST';
+      const response = await api({ method: `/companies`, data: values });
 
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || `Gagal ${isEditMode ? 'mengupdate' : 'membuat'} perusahaan.`);
-
-      // Jika membuat perusahaan baru, data user perlu di-update
-      if (!isEditMode && data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+      if (isEditMode) {
+        // Update: dispatch data perusahaan yang baru
+        dispatch(setCompany(response.data));
+        toast.success("Perusahaan berhasil diupdate!");
+      } else {
+        // Create: dispatch data user yang baru (sudah berisi company)
+        dispatch(setUser(response.data.user));
+        toast.success("Perusahaan berhasil dibuat! Mengarahkan ke dasbor utama...");
+        // Arahkan ke dasbor utama setelah berhasil membuat perusahaan
+        router.push('/dashboard');
       }
-
-      alert(`Perusahaan berhasil ${isEditMode ? 'diupdate' : 'dibuat'}!`);
-      onSuccess(); // Panggil callback untuk refresh data di halaman utama
-
     } catch (err: any) {
-      setError(err.message);
+      toast.error(`Gagal ${isEditMode ? 'mengupdate' : 'membuat'} perusahaan`, {
+        description: err.response?.data?.error,
+      });
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-lg">
       <CardHeader>
         <CardTitle>{isEditMode ? "Edit Perusahaan Anda" : "Buat Perusahaan Anda"}</CardTitle>
-        <CardDescription>
-          {isEditMode ? "Anda bisa mengubah nama perusahaan Anda di sini." : "Anda belum memiliki perusahaan. Silakan buat satu."}
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Perusahaan</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Contoh: PT. Maju Jaya" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+            {/* Form Fields untuk name, address, phone, dan type */}
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem><FormLabel>Nama Perusahaan</FormLabel><FormControl><Input placeholder="PT. Maju Jaya" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="address" render={({ field }) => (
+              <FormItem><FormLabel>Alamat</FormLabel><FormControl><Input placeholder="Jl. Jenderal Sudirman No. 1" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="phone" render={({ field }) => (
+              <FormItem><FormLabel>No. Telepon</FormLabel><FormControl><Input placeholder="08123456789" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="type" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Jenis Perusahaan</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Pilih jenis perusahaan..." /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    <SelectItem value="JASA">Jasa</SelectItem>
+                    <SelectItem value="DAGANG">Dagang</SelectItem>
+                    <SelectItem value="MANUFAKTUR">Manufaktur</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Menyimpan..." : (isEditMode ? "Update Perusahaan" : "Buat Perusahaan")}
             </Button>

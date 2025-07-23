@@ -23,7 +23,7 @@ export function Header() {
       </div>
       <div className="flex items-center gap-4">
         {/* Tampilkan nama user dari state Redux */}
-        <span>Halo, {user?.Name || "Pengguna"}!</span>
+        <span>Halo, {user?.name || "Pengguna"}!</span>
         <Button variant="outline" onClick={handleLogout}>
           Logout
         </Button>

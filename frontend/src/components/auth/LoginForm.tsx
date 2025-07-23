@@ -16,7 +16,7 @@ import { AppDispatch } from '@/store/store';
 import { login } from '@/store/slices/authSlice';
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Format email tidak valid." }),
+  email: z.email({ message: "Format email tidak valid." }),
   password: z.string().min(1, { message: "Password tidak boleh kosong." }),
 });
 
@@ -36,17 +36,18 @@ export function LoginForm() {
     setError(null);
     try {
       const response = await api.post('/auth/login', values);
-      const data = response.data;
-
-      dispatch(login({ user: data.user, token: data.token }));
-      
+      const data = response.data; 
+      dispatch(login(data)); 
       toast.success("Login berhasil!");
-      router.push('/dashboard');
+
+      if (data.hasCompletedSetup) {
+        router.push('/dashboard');
+      } else {
+        router.push('/setup');
+      }
 
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Gagal login';
-      setError(errorMessage);
-      toast.error("Login Gagal", { description: errorMessage });
+      // ... (error handling)
     } finally {
       setIsLoading(false);
     }
