@@ -1,58 +1,66 @@
-// go_api/internal/models/models.go
+// backend/internal/models/models.go
 
 package models
 
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-// User sudah ada, kita lengkapi dengan relasi ke Company
+type BaseModel struct {
+	ID        uuid.UUID      `gorm:"type:uuid;primary_key;" json:"id"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (base *BaseModel) BeforeCreate(tx *gorm.DB) (err error) {
+	base.ID = uuid.New()
+	return
+}
+
 type User struct {
-	gorm.Model
+	BaseModel
 	Name     string   `json:"name"`
 	Email    string   `gorm:"unique" json:"email"`
 	Password string   `json:"-"`
-	Company  *Company `gorm:"foreignKey:OwnerID" json:"company"` // Relasi: User memiliki Company
+	Company  *Company `gorm:"foreignKey:OwnerID" json:"company"`
 }
 
-// Company sekarang memiliki detail lengkap
 type Company struct {
-	gorm.Model
+	BaseModel
 	Name         string        `json:"name"`
 	Address      string        `json:"address"`
 	Phone        string        `json:"phone"`
-	Type         string        `json:"type"`                  // JASA, DAGANG, MANUFAKTUR
-	OwnerID      uint          `gorm:"unique" json:"ownerId"` // Foreign key ke User
+	Type         string        `json:"type"`
+	OwnerID      uuid.UUID     `gorm:"type:uuid;unique" json:"ownerId"` // <-- PERBAIKAN: uint -> uuid.UUID
 	Accounts     []Account     `json:"accounts"`
 	Transactions []Transaction `json:"transactions"`
 }
 
-// Account (Daftar Akun)
 type Account struct {
-	gorm.Model
+	BaseModel
 	Name           string         `json:"name"`
 	Code           string         `json:"code"`
-	Type           string         `json:"type"` // ASET, LIABILITAS, EKUITAS, PENDAPATAN, BEBAN
-	CompanyID      uint           `json:"companyId"`
-	JournalEntries []JournalEntry `json:"-"` // Relasi ke Jurnal
+	Type           string         `json:"type"`
+	CompanyID      uuid.UUID      `gorm:"type:uuid" json:"companyId"` // <-- PERBAIKAN: uint -> uuid.UUID
+	JournalEntries []JournalEntry `json:"-"`
 }
 
-// Transaction (Header dari sebuah Jurnal)
 type Transaction struct {
-	gorm.Model
+	BaseModel
 	Date           time.Time      `json:"date"`
 	Description    string         `json:"description"`
-	CompanyID      uint           `json:"companyId"`
+	CompanyID      uuid.UUID      `gorm:"type:uuid" json:"companyId"` // <-- PERBAIKAN: uint -> uuid.UUID
 	JournalEntries []JournalEntry `json:"journalEntries"`
 }
 
-// JournalEntry (Detail Debit/Kredit dari sebuah Transaksi)
 type JournalEntry struct {
-	gorm.Model
-	Type          string  `json:"type"` // DEBIT atau KREDIT
-	Amount        float64 `json:"amount"`
-	TransactionID uint    `json:"transactionId"`
-	AccountID     uint    `json:"accountId"`
+	BaseModel
+	Type          string    `json:"type"`
+	Amount        float64   `json:"amount"`
+	TransactionID uuid.UUID `gorm:"type:uuid" json:"transactionId"` // <-- PERBAIKAN: uint -> uuid.UUID
+	AccountID     uuid.UUID `gorm:"type:uuid" json:"accountId"`     // <-- PERBAIKAN: uint -> uuid.UUID
 }

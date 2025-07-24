@@ -1,16 +1,19 @@
+// backend/internal/handlers/auth_handler.go
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/ihksanghazi/AI_Accounting_Application/internal/database"
-	"github.com/ihksanghazi/AI_Accounting_Application/internal/models"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/ihksanghazi/AI_Accounting_Application/internal/database"
+	"github.com/ihksanghazi/AI_Accounting_Application/internal/models"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type RegisterInput struct {
@@ -27,11 +30,17 @@ func Register(c *gin.Context) {
 	}
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-
 	user := models.User{Name: input.Name, Email: input.Email, Password: string(hashedPassword)}
+
 	result := database.DB.Create(&user)
+
 	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
+		var pgErr *pgconn.PgError
+		if errors.As(result.Error, &pgErr) && pgErr.Code == "23505" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user due to a database error"})
+		}
 		return
 	}
 
@@ -39,11 +48,7 @@ func Register(c *gin.Context) {
 		"userId": user.ID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
-		return
-	}
+	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	c.JSON(http.StatusCreated, gin.H{"token": tokenString, "user": user})
 }
@@ -61,9 +66,13 @@ func Login(c *gin.Context) {
 	}
 
 	var user models.User
-	database.DB.Preload("Company").Where("email = ?", input.Email).First(&user)
+	result := database.DB.Preload("Company").Where("email = ?", input.Email).First(&user)
+	if result.Error == gorm.ErrRecordNotFound {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
 
-	if user.ID == 0 || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)) != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -72,6 +81,7 @@ func Login(c *gin.Context) {
 		"userId": user.ID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
+
 	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user})
 }

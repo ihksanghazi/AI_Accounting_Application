@@ -1,12 +1,11 @@
 package database
 
 import (
-	// Sesuaikan dengan path modul Anda
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/ihksanghazi/AI_Accounting_Application/internal/models"
+	"github.com/ihksanghazi/AI_Accounting_Application/internal/models" // <-- Pastikan path ini benar
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -23,16 +22,22 @@ func Connect() {
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database")
+		log.Fatal("Failed to connect to database: ", err)
 	}
 
-	// Auto-migrate skema
-	DB.AutoMigrate(
+	// --- PERBAIKAN DI SINI ---
+	// Tambahkan pengecekan error pada AutoMigrate
+	err = DB.AutoMigrate(
 		&models.User{},
 		&models.Company{},
 		&models.Account{},
 		&models.Transaction{},
 		&models.JournalEntry{},
 	)
-	log.Println("Database connected and migrated")
+	if err != nil {
+		log.Fatal("Failed to migrate database: ", err)
+	}
+	// -------------------------
+
+	log.Println("Database connected and migrated successfully")
 }

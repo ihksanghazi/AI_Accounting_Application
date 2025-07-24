@@ -1,22 +1,28 @@
+// backend/internal/handlers/company_handler.go
 package handlers
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/ihksanghazi/AI_Accounting_Application/internal/database"
 	"github.com/ihksanghazi/AI_Accounting_Application/internal/models"
+	"gorm.io/gorm"
 )
 
 func GetCompany(c *gin.Context) {
-	userId, _ := c.Get("userId")
+	userIdStr, _ := c.Get("userId")
+	ownerUUID, err := uuid.Parse(userIdStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
 
 	var company models.Company
-	// Konversi userId (interface{}) ke uint
-	result := database.DB.Where("owner_id = ?", uint(userId.(float64))).First(&company)
+	result := database.DB.Where("owner_id = ?", ownerUUID).First(&company)
 
-	if result.Error != nil {
-		// Tidak masalah jika tidak ditemukan, kembalikan null (bukan error)
+	if result.Error == gorm.ErrRecordNotFound {
 		c.JSON(http.StatusOK, nil)
 		return
 	}
@@ -31,7 +37,13 @@ type CompanyInput struct {
 }
 
 func CreateCompany(c *gin.Context) {
-	userId, _ := c.Get("userId")
+	userIdStr, _ := c.Get("userId")
+	ownerUUID, err := uuid.Parse(userIdStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
 	var input CompanyInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -43,14 +55,22 @@ func CreateCompany(c *gin.Context) {
 		Address: input.Address,
 		Phone:   input.Phone,
 		Type:    input.Type,
-		OwnerID: uint(userId.(float64)),
+		OwnerID: ownerUUID,
 	}
+
 	database.DB.Create(&company)
+
 	c.JSON(http.StatusCreated, company)
 }
 
 func UpdateCompany(c *gin.Context) {
-	userId, _ := c.Get("userId")
+	userIdStr, _ := c.Get("userId")
+	ownerUUID, err := uuid.Parse(userIdStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID format"})
+		return
+	}
+
 	var input CompanyInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -58,8 +78,8 @@ func UpdateCompany(c *gin.Context) {
 	}
 
 	var company models.Company
-	database.DB.Where("owner_id = ?", uint(userId.(float64))).First(&company)
-	if company.ID == 0 {
+	result := database.DB.Where("owner_id = ?", ownerUUID).First(&company)
+	if result.Error == gorm.ErrRecordNotFound {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Company not found"})
 		return
 	}
