@@ -1,14 +1,13 @@
 // frontend/src/store/slices/authSlice.ts
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { User, Company } from '@/types';
-import { stat } from 'fs';
 
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   status: 'loading' | 'idle';
-  hasCompletedSetup: boolean;
 }
 
 const initialState: AuthState = {
@@ -16,20 +15,18 @@ const initialState: AuthState = {
   token: null,
   isAuthenticated: false,
   status: 'loading',
-  hasCompletedSetup: false,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    login: (state, action: PayloadAction<{ user: User; token: string; hasCompletedSetup: boolean }>) => {
-      const { user, token, hasCompletedSetup } = action.payload;
+    login: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      const { user, token } = action.payload;
       state.user = user;
       state.token = token;
       state.isAuthenticated = true;
       state.status = 'idle';
-      state.hasCompletedSetup = hasCompletedSetup;
       if (typeof window !== 'undefined') {
         localStorage.setItem('authToken', token);
         localStorage.setItem('user', JSON.stringify(user));
@@ -41,8 +38,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.status = 'idle';
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        localStorage.clear();
       }
     },
     setAuthIdle: (state) => {
@@ -50,7 +46,7 @@ const authSlice = createSlice({
     },
     setCompany: (state, action: PayloadAction<Company | null>) => {
       if (state.user) {
-        state.user.Company = action.payload;
+        state.user.company = action.payload;
         if (typeof window !== 'undefined'){
           localStorage.setItem('user', JSON.stringify(state.user));
         }

@@ -1,3 +1,4 @@
+// frontend/src/components/auth/RegisterForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +12,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import {toast} from "sonner";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { login } from "@/store/slices/authSlice";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nama minimal 2 karakter." }),
@@ -28,25 +32,29 @@ export function RegisterForm() {
     defaultValues: { name: "", email: "", password: "" },
   });
 
+  const dispatch = useDispatch<AppDispatch>(); // Tambahkan ini
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setError(null);
     try {
-      await api.post('/auth/register', values);
+      const response = await api.post('/auth/register', values);
+      const data = response.data; // Respons sekarang berisi { user, token }
 
+      // Dispatch action 'login' untuk memulai sesi di Redux & localStorage
+      dispatch(login(data));
+      
       toast.success("Pendaftaran berhasil!", {
-        description: "Anda sekarang bisa masuk menggunakan akun baru Anda.",
-        duration: 3000, // Notifikasi akan hilang setelah 3 detik
+        description: "Silakan lengkapi setup perusahaan Anda.",
       });
-      router.push('/login');
+
+      // Arahkan ke halaman setup
+      router.push('/setup');
 
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Terjadi kesalahan yang tidak diketahui';
+      const errorMessage = err.response?.data?.error || 'Terjadi kesalahan';
       setError(errorMessage);
-
-      toast.error("Gagal Mendaftar", {
-        description: errorMessage,
-      });
+      toast.error("Gagal Mendaftar", { description: errorMessage });
     } finally {
       setIsLoading(false);
     }

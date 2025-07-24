@@ -26,11 +26,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 
 	user := models.User{Name: input.Name, Email: input.Email, Password: string(hashedPassword)}
 	result := database.DB.Create(&user)
@@ -39,7 +35,17 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Registration successful", "user": user})
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"userId": user.ID,
+		"exp":    time.Now().Add(time.Hour * 24).Unix(),
+	})
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"token": tokenString, "user": user})
 }
 
 type LoginInput struct {
@@ -62,20 +68,10 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	hasAccounts := false
-	if user.Company != nil && user.Company.ID != 0 {
-		var accountCount int64
-		database.DB.Model(&models.Account{}).Where("company_id = ?", user.Company.ID).Count(&accountCount)
-		if accountCount > 0 {
-			hasAccounts = true
-		}
-	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userId": user.ID,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
 	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-
-	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user, "hasCompletedSetup": hasAccounts})
+	c.JSON(http.StatusOK, gin.H{"token": tokenString, "user": user})
 }

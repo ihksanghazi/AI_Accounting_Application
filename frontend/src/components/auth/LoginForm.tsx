@@ -1,3 +1,4 @@
+// frontend/src/components/auth/LoginForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,17 +38,16 @@ export function LoginForm() {
     try {
       const response = await api.post('/auth/login', values);
       const data = response.data; 
-      dispatch(login(data)); 
+
+      dispatch(login(data));
       toast.success("Login berhasil!");
 
-      if (data.hasCompletedSetup) {
-        router.push('/dashboard');
-      } else {
-        router.push('/setup');
-      }
+      router.push('/dashboard');
 
     } catch (err: any) {
-      // ... (error handling)
+      const errorMessage = err.response?.data?.error || 'Gagal login';
+      setError(errorMessage);
+      toast.error("Login Gagal", { description: errorMessage });
     } finally {
       setIsLoading(false);
     }

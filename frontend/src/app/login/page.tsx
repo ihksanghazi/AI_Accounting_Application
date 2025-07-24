@@ -1,3 +1,5 @@
+// frontend/src/app/login/page.tsx
+
 "use client";
 
 import { useEffect } from "react";
@@ -9,13 +11,21 @@ import { LoginForm } from "@/components/auth/LoginForm";
 export default function LoginPage() {
   const router = useRouter();
   
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, status } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (status === 'idle' && isAuthenticated) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, status]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     return (

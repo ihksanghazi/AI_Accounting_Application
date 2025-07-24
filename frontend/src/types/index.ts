@@ -19,5 +19,5 @@ export interface User {
   DeletedAt: string | null;
   name: string;
   email: string;
-  Company: Company | null;
+  company: Company | null;
 }

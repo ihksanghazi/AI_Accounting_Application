@@ -1,3 +1,4 @@
+// frontend/src/components/company/CompanyForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -56,27 +57,36 @@ export function CompanyForm({ initialData }: CompanyFormProps) {
     setIsLoading(true);
     try {
       const method = isEditMode ? 'PUT' : 'POST';
-      const response = await api({ method: `/companies`, data: values });
+      const response = await api({ url: '/companies', method, data: values });
 
       if (isEditMode) {
-        // Update: dispatch data perusahaan yang baru
         dispatch(setCompany(response.data));
         toast.success("Perusahaan berhasil diupdate!");
       } else {
-        // Create: dispatch data user yang baru (sudah berisi company)
-        dispatch(setUser(response.data.user));
-        toast.success("Perusahaan berhasil dibuat! Mengarahkan ke dasbor utama...");
-        // Arahkan ke dasbor utama setelah berhasil membuat perusahaan
-        router.push('/dashboard');
+        // --- ALUR SETELAH CREATE PERUSAHAAN ---
+        const updatedUser: User = response.data.user;
+
+        // 1. Update localStorage SECARA LANGSUNG
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+        toast.success("Setup berhasil!", {
+          description: "Perusahaan dan daftar akun Anda telah dibuat. Mengarahkan ke dasbor..."
+        });
+
+        // 2. Lakukan FULL PAGE RELOAD ke dasbor
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500); // Tunda sedikit agar user bisa membaca toast
       }
     } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "Terjadi kesalahan";
       toast.error(`Gagal ${isEditMode ? 'mengupdate' : 'membuat'} perusahaan`, {
-        description: err.response?.data?.error,
+        description: errorMessage,
       });
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Set loading false hanya jika error
     }
-  }
+    // Jangan set loading ke false jika berhasil create, karena halaman akan reload
+}
 
   return (
     <Card className="w-full max-w-lg">

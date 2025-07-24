@@ -1,3 +1,4 @@
+// frontend/src/components/scan/ScanUploader.tsx
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";

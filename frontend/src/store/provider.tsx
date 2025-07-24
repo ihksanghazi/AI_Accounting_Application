@@ -4,19 +4,24 @@
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { useEffect } from 'react';
-import { login, setAuthIdle } from './slices/authSlice'; // <-- Pastikan import ini benar
+import { login, setAuthIdle } from './slices/authSlice';
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const userDataString = localStorage.getItem('user');
 
-    if (token && userDataString) {
+    if (token && userDataString && userDataString !== 'undefined' && userDataString !== 'null') {
       try {
         const userData = JSON.parse(userDataString);
-        store.dispatch(login({ token, user: userData }));
+        if (userData && typeof userData === 'object') {
+          store.dispatch(login({ token, user: userData }));
+        } else {
+          localStorage.clear();
+          store.dispatch(setAuthIdle());
+        }
       } catch (error) {
-        console.error("Gagal parse user data", error);
+        console.error("Gagal memproses data localStorage, membersihkan...", error);
         localStorage.clear();
         store.dispatch(setAuthIdle());
       }
